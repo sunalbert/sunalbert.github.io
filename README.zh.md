@@ -1,3 +1,8 @@
+---
+layout: page
+description: "keep thinking, keep foolish"
+---
+
 # Hux blog 模板
 
 ### [我的博客在这里](http://huxpro.github.io)
