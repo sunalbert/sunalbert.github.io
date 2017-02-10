@@ -4,14 +4,14 @@ title:      "dynet初探"
 subtitle:   "动态神经网络库dynet初探"
 date:       2017-02-09
 author:     "Jinquan"
-header-img: "img/post-bg-unix-linux.jpg"
+header-img: "img/post-dynet-insight-bg.jpg"
 tags:
     - 深度学习
     - 深度学习框架
     - dynet
 ---
 
-> 动态深度网络愈发受到业内关注，16年年末和17年年初，先后有dynet、pytorch和TensorFlow Flod三个动态深度框架发布。笔者从16年10月份开始关注dynet，逐步成为该项目的contributor，对这个深度框架整体设计和细节实现都较为了解。本篇即在笔者的源码阅读心得基础上加以整理归纳，介绍dynet的整体架构和设计思路。
+>  动态深度网络愈发受到业内关注，16年年末和17年年初，先后有dynet、pytorch和TensorFlow Flod三个动态深度框架发布。笔者从16年10月份开始关注dynet，逐步成为该项目的contributor，对这个深度框架整体设计和细节实现都较为了解。dynet虽然代码量较少，但是具备一个现代深度学习框架应有的诸多特定：动态结构、计算流图等。本篇即在笔者的源码阅读心得基础上加以整理归纳，介绍dynet的整体架构和设计思路。后续将会有系列文章介绍dynet的具体实现，以便读者深度了解深度学习框架的设计理念和实现细节。
 
 
 
@@ -26,8 +26,9 @@ tags:
    2. [Node](#Node)
    3. [Expression](#Expression)
    4. [ComputationGraph](#ComputationGraph)
-   5. [Model](#Model)
-   6. [Trainer](#Trainer)
+   5. [ExcutionEngine](#ExcutionEngine)
+   6. [Model](#Model)
+   7. [Trainer](#Trainer)
 
 ---
 
@@ -149,8 +150,55 @@ Expression loss_expr = squared_distance(y_pred, y);
    }
    ```
 
-   ​
 
+
+
+
+#### ComputationGraph
+
+ComputationGrahph是整个系统最为重要的一个类，它代表着一个深度网络，抽象表示了一个计算流图。用户可以向计算流图中添加输入数据、待优化参数、以及functoin，以及前向计算和后向计算。主要类成员如下所示,
+
+```c++
+// INPUTS
+// the computational network will pull inputs in from the user's data
+// structures and make them available to the computation
+VariableIndex add_input(real s);  // add scalar
+...
+// PARAMETERS
+// parameters are things that are optimized. in contrast to a system like
+// Torch where computational modules may have their own parameters, in DYNET
+// parameters are just parameters
+VariableIndex add_parameters(Parameter p);
+VariableIndex add_const_parameters(Parameter p);
+...
+// COMPUTATIONS
+template <class Function> inline VariableIndex add_function(const std::initializer_list<VariableIndex>& arguments);
+// forward and backward
+const Tensor& forward(const expr::Expression& last);
+const Tensor& forward(VariableIndex i);
+// run forward pass from the last computed node to given one.
+// useful if you want to add nodes and evaluate just the new parts.
+const Tensor& incremental_forward(const expr::Expression& last);
+const Tensor& incremental_forward(VariableIndex i);
+// get forward value for node at index i. used cached values if available,
+// performs forward evaluation if note available (may compute more than strictly
+// what is needed).
+const Tensor& get_value(VariableIndex i);
+const Tensor& get_value(const expr::Expression& e);
+// clears forward caches (for get_value etc).
+void invalidate();
+// computes backward gradients from the front-most evaluated node.
+void backward(const expr::Expression& last);
+// computes backward gradients from node i (assuming it already been evaluated).
+void backward(VariableIndex i);
+ExecutionEngine* ee;  // handles the execution
+```
+
+计算流图虽然包含了整个网络结构，但是实际上的前向计算和后向计算，并不是ComputattionGraph独立完成的，而是借助于一个成员变量 ee(ExecutionEngine)实现的，主要的前向计算、后向计算等等都是由ee执行的。因为在前后向计算中，会用到网络结构，所以ee中包含了对应的ComnputationGraph cg。
+
+#### ExcutionEngine
+
+Excution类似于**TensorFlow**中的**session**，是用于规划和驱动计算流图中的数据流动(**PS**: engine的作用在于驱动数据流，而不是)。
 
 #### Model
 
@@ -166,4 +214,8 @@ std::vector<unsigned> updated_params;
 std::vector<unsigned> updated_lookup_params;
 L2WeightDecay weight_decay;
 ```
+
+#### Trainer
+
+类似于caffe中的Solver，这个类主要包含了诸多的训练中参数，主要作用是**更新参数**，
 
