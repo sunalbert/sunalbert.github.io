@@ -74,6 +74,9 @@ dynet中的tensor实际是依赖于[eigen](http://eigen.tuxfamily.org/index.php?
 <small class="img-hint">计算流图</small>
 
 在dynet中，所有的参数型node都会被其所属的Model持有。Node基类的主要成员函数和成员变量有：
+
+
+
 ```C++
 Dim dim_forward(); //计算输入数据的维度是否能够计算，并计算输出数据的维度
 void forward_impl(); //前向传播的具体实现
