@@ -11,7 +11,7 @@ tags:
     - dynet
 ---
 
-> 动态深度网络愈发受到业内关注，16年年末和17年年初，先后有dynet、pytorch和TensorFlow Flod三个动态深度框架发布。笔者从16年10月份开始关注dynet，逐步成为该项目的contributor，对这个深度框架整体设计和细节实现都较为了解。本篇即在笔者的源码阅读心得基础上加以整理归纳。
+> 动态深度网络愈发受到业内关注，16年年末和17年年初，先后有dynet、pytorch和TensorFlow Flod三个动态深度框架发布。笔者从16年10月份开始关注dynet，逐步成为该项目的contributor，对这个深度框架整体设计和细节实现都较为了解。本篇即在笔者的源码阅读心得基础上加以整理归纳，介绍dynet的整体架构和设计思路。
 
 
 
@@ -31,75 +31,125 @@ tags:
 
 ---
 
+
+
 ## 整体介绍
 
 
-> Unix is a **family** of multitasking, multiuser computer OS.
+> 动态深度网络dynet，代码简洁，动态计算流图构建速度也较快。
 
-Derive from the original **AT&T Unix**, Developed in the 1970s at **Bell Labs** (贝尔实验室), initially intended for use inside the **Bell System**.
+### 项目介绍
 
-- #### Bell Labs
+[dynet](https://github.com/clab/dynet)是一个由**CMU clab**发起并主导开发的动态深度网络框架，专门针对自然语言处理上的深度学习做了优化和改进。dynet目前支持CPU和GPU两种计算模式，计划加入多GPU支持、模型并行，矩阵计算基于eigen，CPU上计算加速基于cblas。
 
-  Bell 和 AT&A 在那时已经是一家了，可以看到那时的通信公司真是一线 IT 公司呢。
-  **C 语言也是 Bell Labs 的产物**，从一开始就是为了用于 Unix 而设计出来的。所以 Unix （在 73 年用 C 重写）在高校流行后，C 语言也获得了广泛支持。
+### 项目架构
 
-
-
-AT&T licensed Unix to outside parties(第三方) from the late 1970s, leading to a variety of both **academic** (最有有名的 BSD ) and **commercial** (Microsoft Xenix, IBM AIX, SunOS Solaris)
-
-- #### Xenix
-  微软 1979 年从 AT&A 授权来的 Unix OS，配合着 x86 成为当时最受欢迎的 Unix 发行版。后来 M$ 和 IBM 合作开发 OS/2 操作系统后放弃，后来最终转向 **Windows NT**。
-
-- #### BSD
-  **Barkeley Software Distribution**, also called Berkeley Unix. Today the term "BSD" is used to refer to any of the BSD descendants(后代) which together form a branch of the family of Unix-like OS.(共同组成了一个分支)
-  - **BSD 最大的贡献是在 BSD 中率先增加了虚拟存储器和 Internet 协议**，其 TCP/IP(IPv4 only) 代码仍然在现代 OS 上使用（ Microsoft Windows and most of the foundation of Apple's OS X and iOS ）
-  - BSD 后来发展出了众多开源后代，包括 FreeBSD, OpenBSD, NetBSD 等等……很多闭源的 vendor Unix 也都从 BSD 衍生而来。
-
-- #### FreeBSD & Apple
-  FreeBSD 不但是 Open Source BSD 中占有率最高的，还直接影响了 Apple Inc : NeXT Computer 的团队在 FreeBSD 上衍生出了 NeXTSTEP 操作系统，这货后来在 Apple 时期演化成了 **Darwin** ，这个“达尔文”居然还是个开源系统，而且是 the Core of **Mac OS X** and **iOS**.
-
-- #### NeXTSTEP
-  An **object-oriented**, multitasking OS. Low-level C but High-level OC language and runtime the first time, combined with an **OO aplication layer** and including several "kits".    
-  大家都知道 NeXT 是 Steve Jobs 被 forced out of Apple 后和 a few of his coworkers 创办的，所以 **NeXTSTEP 绝对是证明 Jobs 实力的作品。**
-
-- #### Darwin
-  [Darwin](http://en.wikipedia.org/wiki/Darwin_(operating_system\)), the core set of components upon which Mac OS X and iOS based, mostly POSIX compatible, but has never, by itself, been certified as being compatible with any version of **POSIX**. (OS X, since Leopard, has been certified as compatible with the Single UNIX Specification version 3)  
-  **所以说 Mac OS X 算是很正统 Unix 的了**
-
-- #### POSIX
-  可移植操作系统接口, Portable Operating System Interface, is a family of standards specified by the IEEE from maintaining compatibility between OS, defines the API along with Command Line Shells and utility interfaces, for software comaptibility with variants of Unix and other OS.
-  - Fully POSIX compliant:
-    - OS X
-    - QNX OS (BlackBerry)
-  - Mostly complicant:
-    - Linux
-    - OpenBSD/FreeBSD
-    - Darwin (Core of **iOS** & OS X)
-    - **Android**
-  - Complicant via compatibility feature （通过兼容功能实现兼容）
-    - Windows NT Kernel
-      - Windows Server 2000, 2003, 2008, 2008 R2, 2012
-    - Symbian OS (with PIPS)
-      - Symbian was a closed-source OS.
-
+dynet将一个深度网络结构解构为如下几个重要模块：Tensor、Node、Expression、Model、ComputationGraph, SimpleEigen Trainer。每个模块具体含义和实现方式将会在下文做详细介绍。
 
 ---
 
-## Unix-like
 
-> A Unix-like (sometimes referred to as UN*X or *nix) operating system is one that behaves in a manner similar to a Unix system, while not necessarily conforming to or being certified to any version of the **Single UNIX Specification**.
 
-There is no standard for defining the term.  
-其实 Unix-like 是个相对模糊的概念：
+## 模块介绍
 
-* 最狭义的 Unix 单指 Bell Labs's Unix
-* 稍广义的 Unix 指代所有 Licensed Unix, 即通过了 SUS 的 Unix-like ，比如 OS X
-* 最广义的 Unix 即所有 Unix-like 系统，无论它是否通过过任何 SUS，包括 Linux，BSD Family 等
+#### Tensor
 
-#### Single UNIX Specification
-The Single UNIX Specification (SUS) is the collective name of a family of standards for computer OS, compliance with which is required to **qualify for the name "Unix"**, like **POSIX**.
+ 在dynet中，训练过程，所有的数据，都被表示为Tensor，这些数据包括：输入数据、输出数据、网络参数等。Tensor可以说是组成dynet神经网络的基础。Tensor实现在tensor.h和tensor.cc两个文件中。具体实现方法依赖于eigen第三方矩阵计算工具。Tensor有如下成员变量：
+
+```c++
+Dim d;  //shape of tensor
+float* v; // pointer to memory
+std::<Tensor> bs;
+Device* device;
+DeviceMempool mem_pool;
+```
+
+dynet中的tensor实际是依赖于[eigen](http://eigen.tuxfamily.org/index.php?title=Main_Page)实现的，dynet中的tensor只是对eigen::tensor的一次封装，这次封装为eigen::tensor进一步明确了维度、所在device、内存地址等信息。
+
+#### Node
+
+在dynet网络结构中，Node是网络的实际构建单位。Node既可以是由tensor组成的，也可以是由函数组成的，也就是说，有些node是tensor node，而有些node则是function node，在function node上要做一些计算，function node的输出又是一个tensor。但是有一点需要注意的是，实际上在组建深度网络的时候，我们并不会直接使用到node，取而代之的是建立在node之上的Expression类。通过Expression构件深度网络，简洁方便，而且符合人的书写方式，但是底层的以node组成网络的形式，又方便人类理解计算流图的结构。一个具体的计算流图如下所示：
+
+![cg](/img/in-post/post-dynet-insight/cg.jpg)
+<small class="img-hint">计算流图</small>
+
+在dynet中，所有的参数型node都会被其所属的Model持有。Node基类的主要成员函数和成员变量有：
+```C++
+Dim dim_forward(); //计算输入数据的维度是否能够计算，并计算输出数据的维度
+void forward_impl(); //前向传播的具体实现
+void backward_impl(); // 后向传播的具体实现
+void forward(); //前向传播对外调用接口，用于判断当前Node是否支持多批量计算
+void backward();
+unsigned artiy(); //此node的参数个数
+vector<VariableIndex> args; //参数向量
+Dim dim; //输出结果维度
+Device* device; //Node计算所在的device CPU or GPU
+```
+
+#### Expression
+Expression既是表达式的抽象表示，也是一些常用函数的抽象表示。Expression的基础是node，expression的管理者是ComputationGraph。在dynet中，深度网络由Expression组成，所有的参数在高层语义中都是Expression，只不过依赖于下层的node来做具体实现。下面以一个简单的例子，来看看dynet中，如何使用Expression，组成一个xor的深度网络：
+
+```C++
+// 创建一个新的网络，参数的持有者是model，所有参数都会保存在model中
+const unsigned HIDDEN_SIZE = 8;
+p_W = m.add_parameters({HIDDEN_SIZE, 2}); //返回的类型是parameter
+p_b = m.add_parameters({HIDDEN_SIZE});
+p_V = m.add_parameters({1, HIDDEN_SIZE});
+p_a = m.add_parameters({1});
+//深度网络参数表达式
+Expression W = parameter(cg, p_W);
+Expression b = parameter(cg, p_b);
+Expression V = parameter(cg, p_V);
+Expression a = parameter(cg, p_a);
+//组建深度网络
+vector<dynet::real> x_values(2);  // set x_values to change the inputs to the network
+Expression x = input(cg, {2}, &x_values);
+dynet::real y_value;  // set y_value to change the target output
+Expression y = input(cg, &y_value);
+Expression h = tanh(W*x + b);
+Expression y_pred = V*h + a;
+Expression loss_expr = squared_distance(y_pred, y);
+```
+
+上述代码阐明了在dynet中创建网络需要的若干主要步骤：
+
+1. 向模型参加所有参数
+2. 为参数创建表达式实例
+3. 使用表达式构建深度网络（更直观的说，构建最终的目标函数）
+
+前面交代过Node才是构建深度网络结构的基本单位，但是在上述代码中并未出现过任何Node类的实例，那么dynet是怎么从高层的Expression过渡到底层的Node呢。下面以Parameter w加入到深度网络的过程为例，大致介绍下其中的流程：
+
+1. 将paramter转化为Expression (in xor.cc)
+
+   ```C++
+   Expression w = parameter(ctg, p_W);
+   ```
+
+2. 返回Expressin 实例化对象(in expr.cc)
+
+   ```C++
+   return Expression(&g, g.add_parameter(p))
+   ```
+
+3. 向网络中添加Node(in dynet.cc:add_parameter)
+
+   ```C++
+   VariableIndex ComputationGraph::add_parameters(Parameter p) {
+     VariableIndex new_node_index(nodes.size());
+     ParameterNode* new_node = new ParameterNode(p); // 创建新的Node
+     nodes.push_back(new_node); // 将新Node添加到nodes向量中
+     parameter_nodes.push_back(new_node_index); // w是参数，所以向parameter_nodes中也添加一次
+     set_dim_for_new_node(new_node_index);
+     return new_node_index;
+   }
+   ```
+
+   ​
+
+
 
 #### Apple iOS
+
 iOS is a **Unix-like OS based on Darwin(BSD)** and OS X, which share some frameworks including Core Foundation, Founadtion and the Darwin foundation with OS X, but, Unix-like shell access is not avaliable for users and restricted for apps, **making iOS not fully Unix-compatible either.**
 
 The iOS kernal is **XNU**, the kernal of Darwin.
