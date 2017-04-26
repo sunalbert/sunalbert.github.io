@@ -19,16 +19,12 @@ tags:
 2. [滑动方差](#滑动方差)
 3. [实现代码](#实现代码)
 
-#### 滑动均值
+#### 滑动均值/方差
 
 上一篇文章中讲到在训练过程中，BN操作是基于当前batch计算mean和variance的。在测试过程中，我们希望每个BN操作是基于整体数据的mean和variance，扫描所有数据求得mean和variance显然是不现实的，但是测试阶段又不能缺少这两个变量，那么该怎么办呢？
 
-实际上，金融领域已经采取了一些在线方法来计算流数据的mean和variance，这些在线方法得到的mean和variance被称作[movind_average](https://en.wikipedia.org/wiki/Moving_average)
+实际上，金融领域已经采取了一些在线方法来计算流数据的mean和variance，这些在线方法得到的mean和variance被称作[moving_average](https://en.wikipedia.org/wiki/Moving_average)和moving_variance.
 
-#### 滑动方差
-
-待补充
-
-#### 实现代码
+#### 滑动的实现方法
 
 待补充
