@@ -1,5 +1,5 @@
 ---
-layout:     post
+layout:	    post
 title:      "dynet初探"
 subtitle:   "动态神经网络库dynet初探"
 date:       2017-02-09
