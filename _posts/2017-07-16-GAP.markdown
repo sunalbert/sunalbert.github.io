@@ -12,8 +12,6 @@ tags:
 
 > Golbal Average Pooling 第一次出现在论文Network in Network中，后来又很多工作延续使用了GAP，实验证明：Global Average Pooling确实可以提高CNN效果。
 
-[TOC]
-
 ### Traditional Pooling Methods
 
 要想真正的理解Global Average Pooling，首先要了解深度网络中常见的pooling方式，以及全连接层。
