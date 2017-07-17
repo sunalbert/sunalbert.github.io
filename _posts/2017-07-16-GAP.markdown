@@ -39,7 +39,7 @@ tags:
 
 答案是肯定的，*Network in Network*工作使用GAP来取代了最后的全连接层，直接实现了降维，更重要的是极大地减少了网络的参数(CNN网络中占比最大的参数其实后面的全连接层)。Global average pooling的结构如下图所示:
 
-![FCN-architecture](G:\sunalbert.github.io\img\in-post\post-gap\gap.JPG)
+![FCN-architecture](/img/in-post/post-gap/gap.JPG)
 
 <small class="img-hint">GAP结构示意图</small>
 
@@ -49,4 +49,4 @@ tags:
 
 
 
-这样做还有另外一个好处：不用在乎网络输入的图像尺寸。
+这样做还有另外一个好处：不用在乎网络输入的图像尺寸。使用gap也有可能造成收敛变慢。
