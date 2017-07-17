@@ -37,4 +37,16 @@ tags:
 
 有了上面的基础，再来看看global average poolilng。既然全连接网络可以使feature map的维度减少，进而输入到softmax，但是又会造成过拟合，是不是可以用pooling来代替全连接。
 
-答案是肯定的，*Network in Network*工作使用GAP来取代了最后的全连接层，直接实现了降维，更重要的是极大地减少了网络的参数(CNN网络中占比最大的参数其实后面的全连接层)。具体的机构
+答案是肯定的，*Network in Network*工作使用GAP来取代了最后的全连接层，直接实现了降维，更重要的是极大地减少了网络的参数(CNN网络中占比最大的参数其实后面的全连接层)。Global average pooling的结构如下图所示:
+
+![FCN-architecture](G:\sunalbert.github.io\img\in-post\post-gap\gap.JPG)
+
+<small class="img-hint">GAP结构示意图</small>
+
+每个讲到全局池化的都会说GAP就是把avg  pooling的窗口大小设置成feature map的大小，这虽然是正确的，但这并不是GAP内涵的全部。**GAP的意义是对整个网络从结构上做正则化防止过拟合。**既要参数少避免全连接带来的过拟合风险，又要能达到全连接一样的转换功能，怎么做呢？直接从feature map的通道上下手，如果我们最终有1000类，那么最后一层卷积输出的feature map就只有1000个channel，然后对这个feature map应用全局池化，输出长度为1000的向量，这就相当于**剔除了全连接层黑箱子操作的特征，直接赋予了每个channel实际的类别意义**。
+
+实验证明，这种方法是非常有效的，
+
+
+
+这样做还有另外一个好处：不用在乎网络输入的图像尺寸。
