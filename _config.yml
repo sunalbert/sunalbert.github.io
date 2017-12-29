@@ -64,10 +64,10 @@ ga_domain: huangxuan.me
 
 
 
-# Sidebar settings
+# Sidebar settings /img/avatar-sjq.jpg
 sidebar: true                           # whether or not using Sidebar.
-sidebar-about-description: "NLP爱好者,CV入门选手,热衷造轮子"
-sidebar-avatar: /img/avatar-sjq.jpg      # use absolute URL, seeing it's used in both `/` and `/about/`
+sidebar-about-description: ""
+sidebar-avatar:       # use absolute URL, seeing it's used in both `/` and `/about/`
 
 
 
