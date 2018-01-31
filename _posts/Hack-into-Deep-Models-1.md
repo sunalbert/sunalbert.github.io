@@ -2,7 +2,7 @@
 layout:	    post
 title:      "Hack into Deep Models"
 subtitle:   "Vanilla Backpropagation Model for Deep Model Visualization"
-date:       2017-04-13
+date:       2018-01-31
 author:     "Jinquan"
 header-img: "img/post-dynet-insight-bg.jpg"
 tags:
@@ -11,7 +11,7 @@ tags:
 
 ---
 
-> 上一篇文章详细介绍了Batch Normalization的原理、涉及的数学公式，基于这些内容，我们可以实现一个简单的BN操作。但是在实际应用中，只是实现公式描述的BN是无法满足系统需求的。本文将以作者向dynet贡献BN源代码的经历，详细描述如何基于Eigen实现一个实用的Batch Normalization操作。
+> TODO
 
 ### 文章结构
 
