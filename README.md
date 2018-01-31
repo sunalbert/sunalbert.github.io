@@ -1,1 +1,1 @@
-# Jinquan Sun Blog
+# Blog
